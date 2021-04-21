@@ -16,6 +16,10 @@ extern int isDev;
 #define GROUP  000070
 #define OTHER  000007
 
+/// <summary>
+/// Change directory.
+/// </summary>
+/// <returns>The result of the operation. -1 means that it couldn't change directories.</returns>
 int change_dir()
 {
     printf("cd");
@@ -42,6 +46,7 @@ int change_dir()
         printf("no such directory\n");
         return -1;
     }
+
     printf("dev=%d ino=%d\n", dev, ino);
     newip = iget(dev, ino);
     printf("mode=%4x\n", newip->INODE.i_mode);
@@ -56,8 +61,6 @@ int change_dir()
     running->cwd = newip;
     printf("after cd : cwd = [%d %d]\n", running->cwd->dev, running->cwd->ino);
     return 0;
-
-
 }
 
 int find_ino(MINODE *mip, u32 *myino)
@@ -110,6 +113,9 @@ int findmyname(MINODE *parent, u32 myino, char *myname)
     return -1;
 }
 
+/// <summary>
+/// Prints out minode information.
+/// </summary>
 int ls_file(MINODE *mip, char *name)
 {
     char *t1 = "xwrxwrxwr-------";
@@ -224,6 +230,9 @@ void pwd(MINODE *wd)
     printf("\n");
 }
 
+/// <summary>
+/// Page 329. Writes modified minodes to disk.
+/// </summary>
 void myQuit()
 {
     int i;
@@ -398,6 +407,10 @@ int mymkdir(MINODE *pip, char *name)
     return 1;
 }
 
+/// <summary>
+/// Page 332. Creates an empty directory with a data block containing the 
+/// default . and .. entries.
+/// </summary>
 int mk_dir()
 {
     MINODE *mip;
@@ -436,6 +449,7 @@ int mk_dir()
         return 0;
     } 
 
+    // increment parent's link count by 1
     mymkdir(pip, child);
     pip->INODE.i_links_count++;
     pip->INODE.i_atime = pip->INODE.i_ctime = pip->INODE.i_mtime = time(0L);
@@ -478,6 +492,9 @@ int my_creat(MINODE *pip, char *name)
     return ino;
 }
 
+/// <summary>
+/// Page 336. Creates an empty regular file.
+/// </summary>
 int creat_file(char *filename)
 {
     MINODE *mip;
@@ -523,7 +540,7 @@ int creat_file(char *filename)
     return 1;
 }
 
-create_fileProxy()
+int create_fileProxy()
 {
     return creat_file(pathname);
 }

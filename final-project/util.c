@@ -13,19 +13,28 @@ extern int    fd, dev;
 extern int    nblocks, ninodes, bmap, imap, inode_start;
 extern char   line[256], cmd[32], pathname[256];
 
+/// <summary>
+/// Page 323. Reads a virtual disk block from a buffer area in memory.
+/// </summary>
 int get_block(int dev, int blk, char *buf)
 {
    lseek(dev, (long)blk*BLKSIZE, 0);
    read(dev, buf, BLKSIZE);
 }   
 
+/// <summary>
+/// Page 323. Writes a virtual disk block into a buffer area in memory.
+/// </summary>
 int put_block(int dev, int blk, char *buf)
 {
    lseek(dev, (long)blk*BLKSIZE, 0);
    write(dev, buf, BLKSIZE);
 }
 
-// return minode pointer to loaded INODE
+/// <summary>
+/// Page 323. This function returns a pointer to the in-memory minode containing the INODE of (dev, ino). 
+/// The returned minode is unique, i.e., only one copy of the INODE exists in memory. 
+/// </summary>
 MINODE *iget(int dev, int ino)
 {
   int i;
@@ -87,6 +96,13 @@ void decFreeBlocks(int dev)
     put_block(dev, 2,buf);
 }
 
+/// <summary>
+/// Page 324. Releases a used minode pointed by mip. 
+/// Each minode has a ref count, which represents the number of users that are using the minode.
+/// iput() decrements the refCount by 1. 
+/// If the refCount is non-zero, meaning the the minode still ahs other users, the caller simply returns.
+/// If the caller is the last user of the minode (refCount=0), the INODe is written back to disk if it is modified (dirty).
+/// </summary>
 void iput(MINODE *mip)
 {
     int i, block, offset;
@@ -116,6 +132,9 @@ void iput(MINODE *mip)
     put_block(mip->dev, block, buf);
 }
 
+/// <summary>
+/// Page 325. Tokenizes a string using '/' as the delimiter.
+/// </summary>
 int tokenize(char *pathname)
 {
     char *s;
@@ -129,6 +148,9 @@ int tokenize(char *pathname)
     }
 }
 
+/// <summary>
+/// Page 325.
+/// </summary>
 int search(MINODE *mip, char *name)
 {
     int i;
@@ -161,6 +183,10 @@ int search(MINODE *mip, char *name)
     return 0;
 }
 
+/// <summary>
+/// Page 324. Implements the file system tree traversal algorithm. It returns the INODE number (ino) of a specified pathname.
+/// </summary>
+/// <returns>The INODE number (ino) of a specified pathname</returns>
 int getino(char *pathname)
 {
     int i, ino, blk, disp;
@@ -172,7 +198,7 @@ int getino(char *pathname)
         return 2;
 
     if (pathname[0]=='/')
-        mip = iget(dev, 2);//TODO maybe *dev
+        mip = iget(dev, 2); // TODO maybe *dev
     else
         mip = iget(running->cwd->dev, running->cwd->ino);
 
@@ -195,11 +221,17 @@ int getino(char *pathname)
     return ino;
 }
 
+/// <summary>
+/// Page 333.
+/// </summary>
 int tst_bit(char *buf, int BIT)
 {
     return buf[BIT / 8] & (1 << (BIT % 8));
 }
 
+/// <summary>
+/// Page 333.
+/// </summary>
 int set_bit(char *buf, int bit)
 {
     int i, j;
@@ -214,6 +246,9 @@ int clr_bit(char *buf, int bit)
     buf[i] &= ~(1 << j);
 }
 
+/// <summary>
+/// Page 333.
+/// </summary>
 int ialloc(int dev)
 {
     int  i;
@@ -290,6 +325,9 @@ int idalloc(int dev, int ino)
     incFreeInodes(dev);
 }
 
+/// <summary>
+/// Page 333. Allocates a free disk block from a device. Not implemented in the book. 
+/// </summary>
 void bdalloc(int dev, int block)
 {
     char buff[BLKSIZE];

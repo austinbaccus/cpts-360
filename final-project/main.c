@@ -58,7 +58,9 @@ int init()
     }
 }
 
-// load root INODE and set root pointer to it
+/// <summary>
+/// Page 327-329. Loads root INODE and sets the root pointer to it.
+/// </summary>
 int mount_root()
 {  
     printf("mount_root()\n");
