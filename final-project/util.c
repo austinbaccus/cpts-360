@@ -100,7 +100,7 @@ void decFreeBlocks(int dev)
 /// Page 324. Releases a used minode pointed by mip. 
 /// Each minode has a ref count, which represents the number of users that are using the minode.
 /// iput() decrements the refCount by 1. 
-/// If the refCount is non-zero, meaning the the minode still ahs other users, the caller simply returns.
+/// If the refCount is non-zero, meaning the the minode still has other users, the caller simply returns.
 /// If the caller is the last user of the minode (refCount=0), the INODe is written back to disk if it is modified (dirty).
 /// </summary>
 void iput(MINODE *mip)

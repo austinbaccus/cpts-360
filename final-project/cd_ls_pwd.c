@@ -724,6 +724,10 @@ int my_stat()
     return 0;
 }
 
+/// <summary>
+/// Creates a file with the current pathname if none already exists. 
+/// Updates the most recent time that the file was "touched".
+/// </summary>
 int my_touch()
 {
     int ino = getino(pathname);
