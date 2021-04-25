@@ -82,18 +82,21 @@ MINODE *iget(int dev, int ino)
     return 0;
 }
 
+/// <summary>
+/// Page 333. (aka decFreeInodes())
+/// </summary>
 void decFreeBlocks(int dev)
 {
     char buf[BLKSIZE];
     get_block(dev, 1, buf);
     sp = (SUPER *)buf;
     sp->s_free_blocks_count--;
-    put_block(dev, 1,buf);
+    put_block(dev, 1, buf);
 
-    get_block(dev, 2,buf);
+    get_block(dev, 2, buf);
     gp = (GD *)buf;
     gp->bg_free_blocks_count--;
-    put_block(dev, 2,buf);
+    put_block(dev, 2, buf);
 }
 
 /// <summary>
@@ -222,7 +225,7 @@ int getino(char *pathname)
 }
 
 /// <summary>
-/// Page 333.
+/// Page 332/3.
 /// </summary>
 int tst_bit(char *buf, int BIT)
 {
@@ -230,7 +233,7 @@ int tst_bit(char *buf, int BIT)
 }
 
 /// <summary>
-/// Page 333.
+/// Page 332/3.
 /// </summary>
 int set_bit(char *buf, int bit)
 {
@@ -247,7 +250,7 @@ int clr_bit(char *buf, int bit)
 }
 
 /// <summary>
-/// Page 333.
+/// Page 332/3.*
 /// </summary>
 int ialloc(int dev)
 {
@@ -269,6 +272,9 @@ int ialloc(int dev)
     return 0;
 }
 
+/// <summary>
+/// Page 332/3. allocates a free disk block (number) from a device
+/// </summary>
 unsigned long balloc(int dev)
 {
     int i;
@@ -277,19 +283,19 @@ unsigned long balloc(int dev)
     SUPER *temp;
 
     // get total number of blocks
-    get_block(dev,1,buf);
+    get_block(dev, 1, buf);
     temp = (SUPER *)buf;
     nblocks = temp->s_blocks_count;
-    put_block(dev,1,buf);
+    put_block(dev, 1, buf);
 
-    get_block(dev, bmap,buf);
+    get_block(dev, bmap, buf);
 
     for(i = 0; i < nblocks ; i++)
     {
         if(tst_bit(buf,i) == 0)
         {
             set_bit(buf,i);
-            put_block(dev,bmap,buf);
+            put_block(dev, bmap, buf);
 
             decFreeBlocks(dev);
             return i+1;
@@ -298,6 +304,9 @@ unsigned long balloc(int dev)
     return 0;
 }
 
+/// <summary>
+/// Page 333.
+/// </summary>
 int incFreeInodes(int dev)
 {
     char buf[BLKSIZE];
@@ -312,6 +321,10 @@ int incFreeInodes(int dev)
     put_block(dev, 2, buf);
 }
 
+/// <summary>
+/// Page 338. deallocates an inode (number). It clears the ino’s bit in the device’s inodes bitmap to 0. Then it
+///           increments the free inodes count in both superblock and group descriptor by 1
+/// </summary>
 int idalloc(int dev, int ino)
 {
     int i;
@@ -336,92 +349,7 @@ void bdalloc(int dev, int block)
     put_block(dev, bmap, buff);
 }
 
-void rm_child(MINODE *pmip, char *name)
-{
-    INODE* pip = &pmip->INODE;
-    char sbuf[BLKSIZE], temp[256];
-    DIR *dp, *startDp;
-    char  *finalCp, *cp;
-    int first, last;
-    DIR *predDir;
-
-    // assume DIR at most 12 direct blocks
-    for (int i=0; i < 12; i++)
-    {  
-        if (pip->i_block[i] == 0)
-        {
-            return;
-        }
-
-        printf("i=%d i_block[%d]=%d\n",i,i,pip->i_block[i]);
-        get_block(dev, pip->i_block[i], sbuf);
-
-        dp = (DIR *)sbuf;
-        cp = sbuf;
-        int total_length = 0;
-        while(cp < sbuf + BLKSIZE)
-        {
-            strncpy(temp, dp->name, dp->name_len);
-            total_length += dp->rec_len;
-            temp[dp->name_len] = 0;
-            if (!strcmp(temp, name))
-            {
-                if (cp == sbuf && cp + dp->rec_len == sbuf + BLKSIZE) //first
-                {
-                    memset(sbuf, '\0', BLKSIZE);
-                    bdalloc(dev, ip->i_block[i]);
-
-                    pip->i_size -=BLKSIZE;
-                    while(pip->i_block[i+i] && i+1 < 12)
-                    {
-                        get_block(dev, pip->i_block[i], sbuf);
-                        put_block(dev, pip->i_block[i-1], sbuf);
-                        i++;
-                    }
-                }
-                else if(cp+dp->rec_len == sbuf + BLKSIZE) //last
-                {
-                    predDir->rec_len +=dp->rec_len;
-                    put_block(dev, pip->i_block[i], sbuf);
-                }
-                else //middle
-                {
-                    int removed_length = dp->rec_len;
-                    char* cNext = cp + dp->rec_len;
-                    DIR* dNext = (DIR *)cNext;
-                    while(total_length + dNext->rec_len < BLKSIZE)
-                    {
-                        total_length += dNext->rec_len;
-                        int next_length = dNext->rec_len;
-                        dp->inode = dNext->inode;
-                        dp->rec_len = dNext->rec_len;
-                        dp->name_len = dNext->name_len;
-                        strncpy(dp->name, dNext->name, dNext->name_len);
-                        cNext += next_length;
-                        dNext = (DIR *)cNext;
-                        cp+= next_length;
-                        dp = (DIR *)cp;
-                    }
-                    dp->inode = dNext->inode;
-                    // add removed rec_len to the last entry of the block
-                    dp->rec_len = dNext->rec_len + removed_length;
-                    dp->name_len = dNext->name_len;
-                    strncpy(dp->name, dNext->name, dNext->name_len);
-                    put_block(dev, pip->i_block[i], sbuf); // save
-                    pmip->dirty = 1;
-                    return;
-                }
-                pmip->dirty=1;
-                iput(pmip);
-                return;
-            }
-            predDir = dp;
-            cp += dp->rec_len;
-            dp = (DIR *)cp;
-        }
-    }
-}
-
+// ???????????????????????
 void deallocateInodeDataBlocks(MINODE* mip)
 {
     char bitmap[1024],dblindbuff[1024], buff[BLKSIZE];
@@ -522,6 +450,7 @@ void deallocateInodeDataBlocks(MINODE* mip)
     }
 }
 
+// reduce file size to zero
 void my_truncate(MINODE *mip)
 {
     deallocateInodeDataBlocks(mip);

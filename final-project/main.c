@@ -27,6 +27,14 @@ int    isDev = 1;
 
 #include "util.c"
 #include "cd_ls_pwd.c"
+#include "mkdir_creat.c"
+#include "rmdir.c"
+#include "link_unlink.c"
+#include "symlink.c"
+#include "open_close.c"
+#include "read_cat.c"
+#include "write_cp.c"
+#include "mount_umount.c"
 
 int init()
 {
@@ -144,14 +152,14 @@ int main(int argc, char *argv[])
         if (strcmp(cmd, "unlink")==0) my_unlinkProxy();
         if (strcmp(cmd, "symlink")==0) my_symlink();
         if (strcmp(cmd, "stat")==0) my_stat();
-        if (strcmp(cmd, "touch")==0) my_touch();
-        if (strcmp(cmd, "chmod")==0) my_chmod();
+        //if (strcmp(cmd, "touch")==0) my_touch();
+        //if (strcmp(cmd, "chmod")==0) my_chmod();
         if (strcmp(cmd, "rmdir")==0) my_rmdir();
         if (strcmp(cmd, "open")==0) proxyMyOpen();
         if (strcmp(cmd, "cat")==0) cat();
         if (strcmp(cmd, "read")==0) read_file();
         if (strcmp(cmd, "write")==0) write_file();
-        if (strcmp(cmd, "mv")==0) mvProxy();
+        //if (strcmp(cmd, "mv")==0) mvProxy();
         if (strcmp(cmd, "lseek")==0) lseekProxy();
         if (strcmp(cmd, "pfd")==0) pfd();
         if (strcmp(cmd, "close")==0) closeProxy();
